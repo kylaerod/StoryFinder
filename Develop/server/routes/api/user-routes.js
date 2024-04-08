@@ -1,4 +1,14 @@
+const express = require('express');
 const router = require('express').Router();
+
+router.get('/users', (req, res) => {
+  res.send('GET /users route');
+});
+
+router.post('/users', (req, res) => {
+  res.send('POST /users route');
+});
+
 const {
   createUser,
   getSingleUser,

@@ -7,7 +7,10 @@ const routes = require('./routes');
 const { User } = require('./models');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
+
+// Use the routes defined in routes.js
+app.use('/api', routes);
 
 const server = new ApolloServer({
   typeDefs,
@@ -18,21 +21,20 @@ const server = new ApolloServer({
 const startApolloServer = async () => {
   await server.start();
 
+  server.applyMiddleware({ app });
+
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
-  server.applyMiddleware({ app });
-
-  // if we're in production, serve client/build as static assets
+  // If we're in production, serve client/build as static assets
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/build')));
+
+    // For all other requests, serve the index.html file
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, '../client/build/index.html'));
+    });
   }
-
-  app.use(routes);
-
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/index.html'));
-  });
 };
 
 db.once('open', () => {
