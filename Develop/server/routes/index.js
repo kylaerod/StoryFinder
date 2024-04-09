@@ -5,7 +5,7 @@ const router = express.Router();
 
 // serve up react front-end in production
 router.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'client/index.html'));
+  res.sendFile(path.join(__dirname, 'client'));
 });
 
 module.exports = router;
