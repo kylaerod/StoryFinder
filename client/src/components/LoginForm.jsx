@@ -16,6 +16,14 @@ const LoginForm = () => {
     setUserFormData({ ...userFormData, [name]: value });
   };
 
+  const addUser = async (userData) => {
+    try {
+      // Logic to add user to the database
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
@@ -33,6 +41,9 @@ const LoginForm = () => {
       const { token, user } = data.login;
       Auth.login(token);
       console.log(user);
+
+      // Add the user to the database
+      await addUser(user);
     } catch (err) {
       console.error(err);
       setShowAlert(true);
