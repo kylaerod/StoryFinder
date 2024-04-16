@@ -1,45 +1,66 @@
 const express = require('express');
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer, gql } = require('apollo-server-express');
 const path = require('path');
-const { typeDefs, resolvers } = require('./schemas');
-const db = require('./config/connection');
-const routes = require('./routes');
 const { User } = require('./models');
+
+// Your type definitions
+const typeDefs = gql`
+  type User {
+    _id: ID
+    username: String
+    email: String
+    password: String
+  }
+
+  type Query {
+    users: [User]
+    user(username: String!): User
+    me: User
+    hello: String
+  }
+
+  type Mutation {
+    createUser(username: String!, email: String!, password: String!): User
+    loginUser(email: String!, password: String!): User
+  }
+`;
+
+// Your resolvers
+const resolvers = {
+  Query: {
+    // Define your resolvers here
+  },
+  Mutation: {
+    // Define your resolvers here
+  },
+};
 
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// Use the routes defined in routes.js
-app.use('/api', routes);
-
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: () => ({ User }), // Pass the User model to the context
+  context: () => ({ User }), 
 });
 
-const startApolloServer = async () => {
-  await server.start();
-
+server.start().then(() => {
   server.applyMiddleware({ app });
 
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
-  // If we're in production, serve client/build as static assets
+
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/build')));
 
-    // For all other requests, serve the index.html file
+    
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, '../client/build/index.html'));
     });
   }
-};
 
-db.once('open', () => {
-  console.log('MongoDB connected');
-  startApolloServer().then(() => {
-    app.listen(PORT, () => console.log(`🌍 Now listening on localhost:${PORT}`));
+  app.listen(PORT, () => {
+    console.log(`🌍 Now listening on localhost:${PORT}`);
   });
 });

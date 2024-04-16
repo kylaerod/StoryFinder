@@ -2,29 +2,22 @@ const express = require('express');
 const router = express.Router();
 const {
   createUser,
-  getSingleUser,
+  getMe,
   saveBook,
   deleteBook,
-  login,
+  loginUser,
 } = require('../../controllers/user-controller');
 
-// Import middleware
 const { authMiddleware } = require('../../utils/auth');
 
-// Define routes
-router.get('/', (req, res) => {
-  res.send('GET users route');
-});
+router.get('/me', authMiddleware, getMe);
 
-router.post('/', (req, res) => {
-  res.send('POST users route');
-});
-
-// Use authMiddleware where needed
 router.post('/', createUser);
-router.put('/', authMiddleware, saveBook);
-router.post('/login', login);
-router.get('/me', authMiddleware, getSingleUser);
+
+router.post('/login', loginUser);
+
+router.put('/books', authMiddleware, saveBook); // Updated endpoint
+
 router.delete('/books/:bookId', authMiddleware, deleteBook);
 
 module.exports = router;
