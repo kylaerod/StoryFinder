@@ -9,7 +9,7 @@
     "install": "cd server && npm i && cd ../client && npm i",
     "build": "cd client && npm run build",
     "render-build": "npm install && npm run build",
-    "seed": "node server/seeders/seed.js" 
+    "seed": "node server/seeders/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,8 @@
   "dependencies": {
     "@apollo/client": "^3.9.11",
     "@apollo/server": "^4.10.2",
-    "apollo-server-express": "^3.13.0"
+    "apollo-server-express": "^3.13.0",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5"
   }
 }

@@ -44,7 +44,7 @@ export const deleteBook = gql`
   }
 `;
 
-export const saveBook = gql`
+export const SAVE_BOOK = gql`
   mutation saveBook($book: BookInput!) {
     saveBook(book: $book) {
       _id
@@ -61,7 +61,7 @@ export const saveBook = gql`
   }
 `;
 
-export const searchGoogleBooks = gql`
+export const SEARCH_GOOGLE_BOOKS = gql`
   query searchGoogleBooks($searchInput: String!) {
     searchGoogleBooks(searchInput: $searchInput) {
       bookId
@@ -73,3 +73,4 @@ export const searchGoogleBooks = gql`
     }
   }
 `;
+
