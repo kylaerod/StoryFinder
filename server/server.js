@@ -2,6 +2,7 @@ const express = require('express');
 const { ApolloServer, gql } = require('apollo-server-express');
 const path = require('path');
 const { User } = require('./models');
+const userRouter = require('./routes/api/users');
 
 // Your type definitions
 const typeDefs = gql`
@@ -25,6 +26,7 @@ const typeDefs = gql`
   }
 `;
 
+// Your resolvers
 const resolvers = {
   Query: {
     users: async () => {
@@ -76,20 +78,30 @@ const resolvers = {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Serve the static files from the React app
+app.use(express.static(path.join(__dirname, '../client/build')));
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: () => ({ User }), 
 });
 
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+app.use('/api/users', userRouter); // Mount the userRouter at /api/users
+
+// Handle all other routes by serving the React app
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Define a route for the homepage
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
+server/server.js
 server.start().then(async () => {
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
-
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/build')));
-  }
-
   await server.applyMiddleware({ app });
 
   app.listen(PORT, () => {
