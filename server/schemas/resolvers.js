@@ -3,7 +3,7 @@
 const resolvers = {
     Query: {
         hello: () => {
-            return "Hi There I am a Strng Dataset"
+            return "Hi There I am a String Dataset"
         }
     },
 
