@@ -28,6 +28,7 @@ Code that was referenced was by Xandromus. His starter-code github repo is below
 
 https://github.com/coding-boot-camp/solid-broccoli
 
+https://github.com/heidiwu3388/Book-Search-Engine
 
 Old projects I have completed helped a lot with this project as well as the git lab repo:
 https://git.bootcampcontent.com/University-of-Minnesota/UofM-VIRT-FSF-PT-10-2023-U-LOLC-ENTG/-/tree/main/21-MERN/02-Challenge?ref_type=heads
