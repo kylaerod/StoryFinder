@@ -82,15 +82,17 @@ const server = new ApolloServer({
   context: () => ({ User }), 
 });
 
-server.applyMiddleware({ app });
+server.start().then(async () => {
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+  if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/build')));
+  }
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-}
+  await server.applyMiddleware({ app });
 
-app.listen(PORT, () => {
-  console.log(`🌍 Now listening on localhost:${PORT}`);
+  app.listen(PORT, () => {
+    console.log(`🌍 Now listening on localhost:${PORT}`);
+  });
 });
