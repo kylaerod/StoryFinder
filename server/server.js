@@ -44,23 +44,15 @@ const server = new ApolloServer({
   context: () => ({ User }), 
 });
 
-server.start().then(() => {
-  server.applyMiddleware({ app });
+server.applyMiddleware({ app });
 
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+}
 
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/build')));
-
-    
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../client/build/index.html'));
-    });
-  }
-
-  app.listen(PORT, () => {
-    console.log(`🌍 Now listening on localhost:${PORT}`);
-  });
+app.listen(PORT, () => {
+  console.log(`🌍 Now listening on localhost:${PORT}`);
 });
