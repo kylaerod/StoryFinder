@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { useMutation } from '@apollo/client';
 import { Form, Button, Alert } from 'react-bootstrap';
-import { useMutation } from '@apollo/client'; // Import useMutation
 import { ADD_USER } from '../utils/mutations';
 import Auth from '../utils/auth';
 
@@ -8,9 +8,8 @@ const SignupForm = () => {
   const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '' });
   const [validated, setValidated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [errors, setErrors] = useState({});
 
-  const [addUser, { error }] = useMutation(ADD_USER);
+  const [addUserMutation, { error }] = useMutation(ADD_USER);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -24,19 +23,29 @@ const SignupForm = () => {
     if (form.checkValidity() === false) {
       event.preventDefault();
       event.stopPropagation();
-      setValidated(true);
-      return;
     }
 
     try {
-      const { data } = await addUser({ variables: userFormData });
+      const { data: { addUser: { token, user } } } = await addUserMutation({
+        variables: userFormData,
+      });
 
-      const { token, user } = data.addUser;
+      console.log(user);
       Auth.login(token);
     } catch (err) {
       console.error(err);
+      
+      if (err.graphQLErrors) {
+        // Handle specific GraphQL errors
+        err.graphQLErrors.forEach(({ message }) => {
+          if (message === 'Username already exists') {
+            // Handle username already exists error
+          } else {
+            // Handle other GraphQL errors
+          }
+        });
+      }
       setShowAlert(true);
-      setErrors(err.graphQLErrors[0].extensions.exception.errors);
     }
 
     setUserFormData({
@@ -64,9 +73,8 @@ const SignupForm = () => {
             onChange={handleInputChange}
             value={userFormData.username}
             required
-            isInvalid={!!errors.username}
           />
-          <Form.Control.Feedback type='invalid'>{errors.username}</Form.Control.Feedback>
+          <Form.Control.Feedback type='invalid'>Username is required!</Form.Control.Feedback>
         </Form.Group>
 
         <Form.Group className='mb-3'>
@@ -78,9 +86,8 @@ const SignupForm = () => {
             onChange={handleInputChange}
             value={userFormData.email}
             required
-            isInvalid={!!errors.email}
           />
-          <Form.Control.Feedback type='invalid'>{errors.email}</Form.Control.Feedback>
+          <Form.Control.Feedback type='invalid'>Email is required!</Form.Control.Feedback>
         </Form.Group>
 
         <Form.Group className='mb-3'>
@@ -92,9 +99,8 @@ const SignupForm = () => {
             onChange={handleInputChange}
             value={userFormData.password}
             required
-            isInvalid={!!errors.password}
           />
-          <Form.Control.Feedback type='invalid'>{errors.password}</Form.Control.Feedback>
+          <Form.Control.Feedback type='invalid'>Password is required!</Form.Control.Feedback>
         </Form.Group>
         <Button
           disabled={!(userFormData.username && userFormData.email && userFormData.password)}
@@ -104,6 +110,7 @@ const SignupForm = () => {
           Submit
         </Button>
       </Form>
+      {error && <Alert variant='danger'>Error: {error.message}</Alert>}
     </>
   );
 };
