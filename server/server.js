@@ -25,13 +25,51 @@ const typeDefs = gql`
   }
 `;
 
-// Your resolvers
 const resolvers = {
   Query: {
-    // Define your resolvers here
+    users: async () => {
+      try {
+        return await User.find();
+      } catch (err) {
+        throw new Error('Failed to fetch users');
+      }
+    },
+    user: async (_, { username }) => {
+      try {
+        return await User.findOne({ username });
+      } catch (err) {
+        throw new Error('Failed to fetch user');
+      }
+    },
+    me: async (_, __, context) => {
+      if (!context.user) {
+        throw new Error('Authentication required');
+      }
+      return context.user;
+    },
+    hello: () => 'Hello, world!',
   },
   Mutation: {
-    // Define your resolvers here
+    createUser: async (_, { username, email, password }) => {
+      try {
+        const user = new User({ username, email, password });
+        await user.save();
+        return user;
+      } catch (err) {
+        throw new Error('Failed to create user');
+      }
+    },
+    loginUser: async (_, { email, password }) => {
+      try {
+        const user = await User.findOne({ email });
+        if (!user || !user.comparePassword(password)) {
+          throw new Error('Invalid credentials');
+        }
+        return user;
+      } catch (err) {
+        throw new Error('Failed to log in');
+      }
+    },
   },
 };
 
