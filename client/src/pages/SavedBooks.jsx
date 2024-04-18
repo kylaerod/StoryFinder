@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Button, Row, Col } from 'react-bootstrap';
 import { useMutation, useQuery } from '@apollo/client';
-import { me } from '../utils/queries';
 import { deleteBook as deleteBookMutation } from '../utils/mutations'; // Rename deleteBook to deleteBookMutation
 import Auth from '../utils/auth';
 
 const SavedBooks = () => {
   const [userData, setUserData] = useState({});
-  const { loading, data } = useQuery(me, {
+  const { loading, data } = useQuery(GET_SAVED_BOOK_IDS, {
     variables: { token: Auth.getToken() }
   });
 

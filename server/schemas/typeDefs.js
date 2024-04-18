@@ -48,10 +48,25 @@ const typeDefs = gql`
       link: String
     ): User
     
-    removeBook(
+    deleteBook(
       bookId: String!
+      authors:[String]
+      description: String!
+      title: String!
+      image: String
+      link: String
     ): User
   }
-`;
+  
+searchGoogleBooks(
+  bookId: String!,
+  authors:[String],
+  description: String!,
+  title: String!,
+  image: String,
+  link: String
+)`;
+
+
 
 module.exports = typeDefs;

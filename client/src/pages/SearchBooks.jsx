@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Auth from '../utils/auth';
 import { searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
-import { useMutation, useQuery } from '@apollo/client'; // Import useQuery and useMutation
-import { SAVE_BOOK, SEARCH_GOOGLE_BOOKS } from '../utils/mutations'; // Import mutations
-import { GET_SAVED_BOOK_IDS } from '../utils/queries'; // Import query
+import { useMutation, useQuery } from '@apollo/client'; 
+import { SAVE_BOOK, SEARCH_GOOGLE_BOOKS } from '../utils/mutations'; 
+import { GET_SAVED_BOOK_IDS } from '../utils/queries'; 
 
 const SearchBooks = () => {
   const [searchedBooks, setSearchedBooks] = useState([]);
@@ -12,8 +12,7 @@ const SearchBooks = () => {
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
 
   const [saveBook] = useMutation(SAVE_BOOK);
-  const { loading, data } = useQuery(GET_SAVED_BOOK_IDS); // Use the query
-
+  const { loading, data } = useQuery(GET_SAVED_BOOK_IDS);
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
   }, [savedBookIds]);

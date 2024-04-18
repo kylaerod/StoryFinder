@@ -1,4 +1,3 @@
-import React from 'react';
 import { ApolloProvider } from '@apollo/client';
 import { createHttpLink } from '@apollo/client/link/http';
 import { InMemoryCache } from '@apollo/client/cache';
