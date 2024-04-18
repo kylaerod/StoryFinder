@@ -1,71 +1,74 @@
-const { User } = require('./models');
-const axios = require('axios');
-require('dotenv').config();
-
+const { AuthenticationError } = require('apollo-server-express');
+const { User } = require('../models');
+const { signToken } = require('../utils/auth');
 
 const resolvers = {
   Query: {
-    searchBooks: async (_, { query }) => {
-      const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
-      try {
-        const response = await axios.get('https://www.googleapis.com/books/v1/volumes', {
-          params: {
-            q: query,
-            key: GOOGLE_BOOKS_API_KEY,
-          },
-        });
-    
-        const books = response.data.items.map(item => ({
-          id: item.id,
-          title: item.volumeInfo.title,
-          author: item.volumeInfo.authors ? item.volumeInfo.authors.join(', ') : 'Unknown Author',
-        }));
-    
-        return books;
-      } catch (error) {
-        console.error('Error searching for books:', error);
-        throw new Error('Failed to search for books');
+    // retrieve the logged in user from the context and find the user details in the database
+    me: async (parent, args, context) => {
+      if (context.user) {
+        return User.findOne({ _id: context.user._id });
       }
+      throw new AuthenticationError('You need to be logged in!');
     },
   },
+
   Mutation: {
-    createUser: async (_, { username, email, password }) => {
-      try {
-        const newUser = await User.create({ username, email, password });
-        return newUser;
-      } catch (error) {
-        console.error('Error creating user:', error);
-        throw new Error('Failed to create user');
-      }
-    },
-    loginUser: async (_, { email, password }) => {
+    login: async (parent, { email, password }) => {
       const user = await User.findOne({ email });
+
       if (!user) {
-        throw new Error('Invalid email or password');
-      }
-     
-      const isValidPassword = await user.isCorrectPassword(password);
-      if (!isValidPassword) {
-        throw new Error('Invalid email or password');
+        throw new AuthenticationError('No user with this email found!');
       }
 
-      const token = jwt.sign({ email: user.email, id: user._id }, 'your_secret_key', { expiresIn: '1h' });
+      const correctPw = await user.isCorrectPassword(password);
 
+      if (!correctPw) {
+        throw new AuthenticationError('Incorrect password!');
+      }
+
+      const token = signToken(user);
       return { token, user };
     },
-    saveBook: async (_, { book }, { user }) => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      // Implement saving book logic here
+
+    addUser: async (parent, { username, email, password }) => {
+      const user = await User.create({ username, email, password });
+      const token = signToken(user);
+      
+      return { token, user};
     },
-    removeBook: async (_, { bookId }, { user }) => {
-      if (!user) {
-        throw new Error('User not authenticated');
+
+    // retrieve the logged in user from the context and add the book to the user's savedBooks array
+    saveBook: async (parent, book, context) => {
+      // If context has a `user` property, that means the user executing this mutation has a valid JWT and is logged in
+      if (context.user) {
+        return User.findOneAndUpdate(
+          { _id: context.user._id},
+          {
+            $addToSet: { savedBooks: book},
+          },
+          {
+            new: true,
+            runValidators: true 
+          }
+        );
       }
-      // Implement removing book logic here
+      // If user attempts to execute this mutation and isn't logged in, throw an error
+      throw new AuthenticationError('You need to be logged in!');
+    },
+    
+    // retrieve the logged in user from the context and remove the book from the user's savedBooks array
+    removeBook: async (parent, { bookId }, context) => {
+      if (context.user) {
+        return User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $pull: { savedBooks: { bookId: bookId } } },
+          { new: true }
+        );
+      }
+      throw new AuthenticationError('You need to be logged in!');
     },
   },
 };
 
-module.exports = { resolvers };
+module.exports = resolvers;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
 import Auth from '../utils/auth';
 
@@ -12,7 +12,14 @@ const LoginForm = () => {
   const [showAlert, setShowAlert] = useState(false);
   
   // refactored to use GraphQL API instead of RESTful API
-  const [login, { loading }] = useMutation(LOGIN_USER);
+  const [login, { error }] = useMutation(LOGIN_USER);
+  useEffect(()=>{
+    if (error) {
+      setShowAlert(true)
+    } else {
+      setShowAlert(false)
+    }
+  }, [error]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -48,9 +55,9 @@ const LoginForm = () => {
     });
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <>
