@@ -1,10 +1,14 @@
 const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
+const { gql } = require('apollo-server-express');
+const { ApolloServer } = require('@apollo/server');
 const path = require('path');
 const { User } = require('./models');
 const userRouter = require('./routes/api/users');
+const { expressMiddleware } = require('@apollo/server/express4');
+const db = require('./config/connection');
+const { authMiddleware } = require('./utils/auth');
 
-// Your type definitions
+
 const typeDefs = gql`
   type User {
     _id: ID
@@ -21,8 +25,8 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createUser(username: String!, email: String!, password: String!): User
-    loginUser(email: String!, password: String!): User
+    addUser(username: String!, email: String!, password: String!): User
+    login(email: String!, password: String!): User
   }
 `;
 
@@ -49,10 +53,10 @@ const resolvers = {
       }
       return context.user;
     },
-    hello: () => 'Hello, world!',
+  
   },
   Mutation: {
-    createUser: async (_, { username, email, password }) => {
+    addUser: async (_, { username, email, password }) => {
       try {
         const user = new User({ username, email, password });
         await user.save();
@@ -61,7 +65,7 @@ const resolvers = {
         throw new Error('Failed to create user');
       }
     },
-    loginUser: async (_, { email, password }) => {
+    login: async (_, { email, password }) => {
       try {
         const user = await User.findOne({ email });
         if (!user || !user.comparePassword(password)) {
@@ -76,35 +80,61 @@ const resolvers = {
 };
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Serve the static files from the React app
-app.use(express.static(path.join(__dirname, '../client/build')));
+// app.use(express.static(path.join(__dirname, '../client/build')));
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: () => ({ User }), 
 });
+const startApolloServer = async () => {
+  await server.start();
+  
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
+  
+  app.use('/graphql', expressMiddleware(server, {
+    context: authMiddleware
+  }));
+  // if we're in production, serve client/dist as static assets
+  if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/dist')));
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    });
+  } 
 
-app.use('/api/users', userRouter); // Mount the userRouter at /api/users
-
-// Handle all other routes by serving the React app
-app.use(express.static(path.join(__dirname, '../client/dist')));
-
-// Define a route for the homepage
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
-
-server/server.js
-server.start().then(async () => {
-  await server.applyMiddleware({ app });
-
-  app.listen(PORT, () => {
-    console.log(`🌍 Now listening on localhost:${PORT}`);
+  db.once('open', () => {
+    app.listen(PORT, () => {
+      console.log(`API server running on port ${PORT}!`);
+      console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
+    });
   });
-});
+};
+
+startApolloServer();
+
+// app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+
+// // app.use('/api/users', userRouter);
+
+// // Handle all other routes by serving the React app
+// app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// // Define a route for the homepage
+// app.get('/', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+// });
+
+// server/server.js
+// server.start().then(async () => {
+//   await server.applyMiddleware({ app });
+
+//   app.listen(PORT, () => {
+//     console.log(`🌍 Now listening on localhost:${PORT}`);
+//   });
+// });

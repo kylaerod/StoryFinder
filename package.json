@@ -18,8 +18,6 @@
     "concurrently": "^5.1.0"
   },
   "dependencies": {
-    "@apollo/client": "^3.9.11",
-    "@apollo/server": "^4.10.2",
     "apollo-server-express": "^3.13.0",
     "axios": "^1.6.8",
     "dotenv": "^16.4.5",
