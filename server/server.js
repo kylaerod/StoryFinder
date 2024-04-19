@@ -9,7 +9,7 @@ const db = require('./config/connection');
 const { authMiddleware } = require('./utils/auth');
 
 
-const typeDefs = gql`
+const typeDefs = `
   type User {
     _id: ID
     username: String
@@ -29,6 +29,7 @@ const typeDefs = gql`
     login(email: String!, password: String!): User
   }
 `;
+
 
 // Your resolvers
 const resolvers = {
