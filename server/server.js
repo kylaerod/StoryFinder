@@ -1,13 +1,11 @@
 const express = require('express');
-const { gql } = require('apollo-server-express');
-const { ApolloServer } = require('@apollo/server');
-const path = require('path');
+const { graphqlHTTP } = require('express-graphql');
+const { makeExecutableSchema } = require('@graphql-tools/schema');
 const { User } = require('./models');
-const { expressMiddleware } = require('@apollo/server/express4');
-const db = require('./config/connection');
-const { authMiddleware } = require('./utils/auth');
+const authMiddleware = require('./utils/auth');
 
 
+// Define your schema
 const typeDefs = `
   type User {
     _id: ID
@@ -28,7 +26,6 @@ const typeDefs = `
     login(email: String!, password: String!): User
   }
 `;
-
 
 // Your resolvers
 const resolvers = {
@@ -53,7 +50,7 @@ const resolvers = {
       }
       return context.user;
     },
-  
+    hello: () => 'Hello, World!',
   },
   Mutation: {
     addUser: async (_, { username, email, password }) => {
@@ -79,62 +76,21 @@ const resolvers = {
   },
 };
 
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-// Serve the static files from the React app
-// app.use(express.static(path.join(__dirname, '../client/build')));
-
-const server = new ApolloServer({
+// Create a schema
+const schema = makeExecutableSchema({
   typeDefs,
   resolvers,
 });
-const startApolloServer = async () => {
-  await server.start();
-  
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
-  
-  app.use('/graphql', expressMiddleware(server, {
-    context: authMiddleware
-  }));
-  // if we're in production, serve client/dist as static assets
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
 
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-    });
-  } 
+// Create an Express server
+const app = express();
 
-  db.once('open', () => {
-    app.listen(PORT, () => {
-      console.log(`API server running on port ${PORT}!`);
-      console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
-    });
-  });
-};
+// Use the authMiddleware middleware for all GraphQL requests
+app.use('/graphql', authMiddleware, graphqlHTTP({ schema, graphiql: true }));
 
-startApolloServer();
-
-// app.use(express.urlencoded({ extended: true }));
-// app.use(express.json());
-
-// // app.use('/api/users', userRouter);
-
-// // Handle all other routes by serving the React app
-// app.use(express.static(path.join(__dirname, '../client/dist')));
-
-// // Define a route for the homepage
-// app.get('/', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-// });
-
-// server/server.js
-// server.start().then(async () => {
-//   await server.applyMiddleware({ app });
-
-//   app.listen(PORT, () => {
-//     console.log(`🌍 Now listening on localhost:${PORT}`);
-//   });
-// });
+// Start the server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`API server running on port ${PORT}!`);
+  console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
+});
