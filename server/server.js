@@ -1,5 +1,4 @@
 const express = require('express');
-const path = require('path');
 const { User } = require('./models');
 const { ApolloServer } = require('@apollo/server');
 const { expressMiddleware } = require('@apollo/server/express4');
@@ -109,12 +108,11 @@ const startApolloServer = async () => {
   }
 
   db.once('open', () => {
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, () => {
       console.log(`API server running on port ${PORT}!`);
-      console.log(`Use GraphQL at http://0.0.0.0:${PORT}/graphql`);
+      console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
     });
   });
-  
 }
 
 startApolloServer();
